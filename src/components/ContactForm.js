@@ -1,77 +1,35 @@
-import React, { useState } from "react";
+import React, {useState} from "react";
 import DisplayComponent from './DisplayComponent';
-
+import {useForm} from '../hooks/useForm';
 const formData = {
   firstName: "",
   lastName: "",
   email: "",
   message: ""
 }
+const errorHandling = (fieldName, fieldValue) => {
+  if (fieldName === "firstName" && fieldValue.length < 5)
+    return `${fieldName} must have at least 5 characters.`;
 
-const errorData = {
-  firstName: "",
-  lastName: "",
-  email: "",
-  message: ""
+  const emailRegex = /(.*)@(.*)\.(.+)/g;
+  if (fieldName === "email" && !fieldValue.match(emailRegex))
+    return `${fieldName} must be a valid email address.`;
+
+  if (fieldName !== "message" && fieldValue === "")
+    return `${fieldName} is a required field.`;
+  
+  return "";
 }
-
 const ContactForm = () => {
-  const [displayData, setDisplayData] = useState(false);
-  const [form, setForm] = useState(formData);
-  const [errors, setErrors] = useState(errorData);
-
-  const errorHandling = (fieldName, fieldValue) => {
-    if (fieldName === "firstName" && fieldValue.length < 5)
-      return `${fieldName} must have at least 5 characters.`;
-
-    const emailRegex = /(.*)@(.*)\.(.+)/g;
-    if (fieldName === "email" && !fieldValue.match(emailRegex))
-      return `${fieldName} must be a valid email address.`;
-
-    if (fieldName !== "message" && fieldValue === "")
-      return `${fieldName} is a required field.`;
-    
-    return "";
-  }
-
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    const submitErrors = {};
-    Object.keys(errors).forEach(field => {
-      submitErrors[field] = errorHandling(field, form[field])
-    });
-    
-    setErrors(submitErrors);
-    
-    const hasErrors = (submitErrors.firstName === "" && submitErrors.lastName === "" && submitErrors.email === "" && submitErrors.message === "");
-    setDisplayData(hasErrors);
-      
+  const [display,setDisplay] = useState(false);
+  const [form,errors,handleChange,handleSubmit] = useForm(formData,errorHandling);
+  const handleSubmitForm=(e)=>{
+    setDisplay(handleSubmit(e));
   };
-
-  const handleChange = (e) => {
-    const errorMessage = errorHandling(e.target.name, e.target.value);
-
-    if (errorMessage !== "") {
-      setDisplayData(false);
-    }
-
-    setErrors({
-      ...errors,
-      [e.target.name]: errorMessage
-    });
-
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value
-    });
-  }
-
   return (
-    <div className="App">
-      <h1>Contact Form</h1>
-      <form onSubmit={handleSubmit}>
+    <div className="App" data-testid="form-component">
+      <h1 data-testid="form-header">Contact Form</h1>
+      <form onSubmit={handleSubmitForm}>
         <div>
           <label htmlFor="firstName">First Name*</label>
           <input
@@ -80,6 +38,7 @@ const ContactForm = () => {
             value={form.firstName}
             id="firstName"
             placeholder="Edd"
+            data-testid="first-name-input"
           />
           {(errors.firstName) && <p data-testid="error">Error: {errors.firstName}</p>}
         </div>
@@ -92,6 +51,7 @@ const ContactForm = () => {
             name="lastName"
             value={form.lastName}
             placeholder="Burke"
+            data-testid="last-name-input"
           />
           {(errors.lastName) && <p data-testid="error">Error: {errors.lastName}</p>}
         </div>
@@ -104,6 +64,7 @@ const ContactForm = () => {
             name="email" 
             value={form.email}
             placeholder="bluebill1049@hotmail.com"
+            data-testid="email-input"
           />
           {(errors.email) && <p data-testid="error">Error: {errors.email}</p>}
         </div>
@@ -115,13 +76,14 @@ const ContactForm = () => {
             name="message"
             id="message"
             value={form.message}
+            data-testid="message-input"
           />
           {(errors.message) && <p data-testid="error">Error: {errors.message}</p>}
         </div>
 
-        {displayData && <DisplayComponent form={form}/>}
+        {display && <DisplayComponent form={form}/>}
 
-        <input type="submit" />
+        <input data-testid="submit" type="submit" />
       </form>
     </div>
   );
